@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id       Int       @id @default(autoincrement())
+  nombre   String    @db.VarChar(50)
+  email    String    @unique @db.VarChar(100)
+  password String    @db.VarChar(255)
+  rol_id   Int
+  empleado Empleado? @relation("UsuarioEmpleado")
+  rol      Rol       @relation(fields: [rol_id], references: [id])
+
+  @@index([rol_id], map: "usuarios_rol_id_fkey")
+  @@map("usuarios")
+}
+
+model Empleado {
+  id              Int          @id @default(autoincrement())
+  nombres         String       @db.VarChar(50)
+  apellidos       String       @db.VarChar(50)
+  correo          String       @unique @db.VarChar(100)
+  telefono        String?      @db.VarChar(20)
+  usuario_id      Int          @unique
+  departamento_id Int
+  departamento    Departamento @relation(fields: [departamento_id], references: [id])
+  usuario         Usuario      @relation("UsuarioEmpleado", fields: [usuario_id], references: [id])
+  permisos        Permiso[]
+
+  @@index([departamento_id], map: "empleados_departamento_id_fkey")
+  @@map("empleados")
+}
+
+model Rol {
+  id          Int       @id @default(autoincrement())
+  nombre      String    @unique @db.VarChar(50)
+  descripcion String?
+  usuarios    Usuario[]
+
+  @@map("roles")
+}
+
+model Departamento {
+  id          Int        @id @default(autoincrement())
+  nombre      String     @unique @db.VarChar(50)
+  descripcion String?
+  empleados   Empleado[]
+
+  @@map("departamentos")
+}
+
+model Permiso {
+  id          Int      @id @default(autoincrement())
+  fecha       DateTime
+  motivo      String   @db.VarChar(255)
+  empleado_id Int
+  empleado    Empleado @relation(fields: [empleado_id], references: [id])
+
+  @@index([empleado_id], map: "permisos_empleado_id_fkey")
+  @@map("permisos")
+}
